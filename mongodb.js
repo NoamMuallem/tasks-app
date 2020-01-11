@@ -21,43 +21,22 @@ MongoClient.connect(
     //creating new database, by trying to access it, it will be created for us
     const db = client.db(databaseName);
 
-    db.collection("users")
-      .updateOne(
-        {
-          _id: new ObjectID("5e19997be416bfa88b3c08b7")
-        },
-        {
-          //change the fileds in the document
-          $set: {
-            name: "bob"
-          },
-          //incrimating by 1
-          $inc: {
-            age: 1
-          }
-        }
-      )
-      .then(result => {
-        ///promies fulfiled
-        console.log(result);
-      })
-      .catch(error => {
-        //promies rejected
-        console.log(error);
-      });
+    // db.collection("users")
+    //   .deleteMany({
+    //     age: 27
+    //   })
+    //   .then(result => {
+    //     console.log(result);
+    //   })
+    //   .catch(error => {
+    //     console.log(error);
+    //   });
 
-    //challenge: complite all the goals:
+    //challenge delete one task
     db.collection("tasks")
-      .updateMany(
-        {
-          completed: false
-        },
-        {
-          $set: {
-            completed: true
-          }
-        }
-      )
+      .deleteOne({
+        description: "make dinner"
+      })
       .then(result => {
         console.log(result);
       })
