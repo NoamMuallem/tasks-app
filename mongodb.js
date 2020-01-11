@@ -9,10 +9,6 @@ const { MongoClient, ObjectID } = require("mongodb");
 const connectionURL = "mongodb://127.0.0.1:27017";
 const databaseName = "tesk-manager";
 
-const id = new ObjectID();
-console.log(id);
-console.log(id.getTimestamp());
-
 //asynchronus function
 MongoClient.connect(
   connectionURL,
@@ -24,69 +20,52 @@ MongoClient.connect(
 
     //creating new database, by trying to access it, it will be created for us
     const db = client.db(databaseName);
-    //----------------adding one user at a time-----------------------
-    //adding new collection to the db, again will be created for us when we try to access it
-    //also asychronus function
-    db.collection("users").insertOne(
-      {
-        _id: id,
-        name: "Noam Muallem",
-        age: 27
-      },
-      //the callback and result are defined in the documentetion of the apii
-      (error, result) => {
-        if (error) {
-          return console.log("unable to add user");
-        }
 
-        console.log(result.ops);
-      }
-    );
+    // //will fetch a user from database with query
+    // //with the callback function we can get error or the document itself
+    // db.collection("users").findOne({ name: "Noam Muallem" }, (error, user) => {
+    //   if (error) {
+    //     return "unable to fined requested document";
+    //   }
 
-    //     //-----------------adding many users at a time---------------
-    // db.collection("users").insertMany(
-    //   [
-    //     {
-    //       name: "jan",
-    //       age: 28
-    //     },
-    //     {
-    //       name: "avi",
-    //       age: 24
-    //     }
-    //   ],
-    //   (error, result) => {
+    //   console.log(user);
+    // });
+
+    // //no match is not an error but null!!!
+    // db.collection("users").findOne({ name: "bob" }, (error, user) => {
+    //   if (error) {
+    //     return "unable to fined requested document";
+    //   }
+
+    //   console.log(user);
+    // });
+
+    // //to use a document id we need to pass an id OBJECT if not, we will get null
+    // db.collection("users").findOne(
+    //   { _id: new ObjectID("5e1991faf9dbf00833a576e5") },
+    //   (error, user) => {
     //     if (error) {
-    //       return console.log("unable to insert documents");
+    //       return "unable to fined requested document";
     //     }
 
-    //     console.log(result.ops);
+    //     console.log(user);
     //   }
     // );
 
-    // //chalenge, add mane documents to new tasks collection
-    // db.collection("tasks").insertMany(
-    //   [
-    //     {
-    //       description: "buy grosheries",
-    //       completed: true
-    //     },
-    //     {
-    //       description: "do homework",
-    //       completed: false
-    //     },
-    //     {
-    //       description: "make dinner",
-    //       completed: true
-    //     }
-    //   ],
-    //   (error, result) => {
-    //     if (error) {
-    //       return console.log("unable to add tasks");
-    //     }
+    //find return a currsor- pointer in the database to all the collections we fined
+    //this gives us more flexability with the output
+    //by usin toArray we can construct an arry from the currsore we got from fined
+    db.collection("users")
+      .find({ age: 27 })
+      .toArray((error, users) => {
+        console.log(users);
+      });
 
-    //     console.log(result.ops);
-    //   }
-    // );
+    //lets see hoe mutch maches can we get
+    db.collection("users")
+      .find({ age: 27 })
+      .count((error, count) => {
+        console.log(count);
+      });
   }
 );
