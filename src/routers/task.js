@@ -54,10 +54,18 @@ router.patch("/tasks/:id", async (req, res) => {
   }
   //if valid update parameters
   try {
-    const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
+    //changing to make it save() than go to middelman
+    const task = await Task.findById(req.params.id);
+    updates.forEach(update => {
+      task[update] = req.body[update];
     });
+
+    await task.save();
+
+    // const task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+    //   new: true,
+    //   runValidators: true
+    // });
 
     //if no task with that id was fount
     if (!task) {

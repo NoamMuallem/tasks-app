@@ -1,29 +1,76 @@
 const User = require("../models/user");
 const express = require("express");
+const auth = require("../middleware/auth");
 const router = new express.Router();
 
+////////////no authentication needed/////////////
 //creat user
 router.post("/users", async (req, res) => {
   const user = new User(req.body);
 
   try {
-    await user.save();
-    //gonne run only is thar is no error and the promis is furfiled
-    res.status(201).send(user);
+    const token = await user.generateAuthToken();
+
+    res.send({
+      user,
+      token
+    });
   } catch (e) {
     res.status(400).send(e);
   }
 });
 
-//get all the users on the database
-router.get("/users", async (req, res) => {
-  //just fetch all the user, no search ceriteria
+//user logout from one session
+router.post("/users/logout", auth, async (req, res) => {
   try {
-    users = await User.find({});
-    res.send(users);
+    req.user.tokens = req.user.tokens.filter(token => {
+      token.token !== req.token;
+    }); //keep all tokens that dont belong to this session
+
+    await req.user.save();
+
+    res.send();
   } catch (e) {
-    res.status(500).send(e);
+    res.status(500).send();
   }
+});
+
+//user logout of ALL sessions
+router.post("/users/logoutAll", auth, async (req, res) => {
+  try {
+    req.user.tokens = [];
+
+    await req.user.save();
+
+    res.send();
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
+//user login
+router.post("/users/login", async (req, res) => {
+  try {
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+
+    const token = await user.generateAuthToken();
+
+    res.send({
+      user,
+      token
+    });
+  } catch (e) {
+    res.status(400).send();
+  }
+});
+
+//////////////authentication needed//////////////
+//get all the users on the database
+router.get("/users/me", auth, async (req, res) => {
+  res.send(req.user);
 });
 
 //getting user with specific user id
@@ -54,11 +101,19 @@ router.patch("/users/:id", async (req, res) => {
   }
 
   try {
+    const user = await User.findById(req.params.id);
+
+    //accesing an unknown propperty
+    updates.forEach(update => (user[update] = req.body[update]));
+
+    //makeing sure we will call user.save so we can hash a new password if needed
+    await user.save();
+
     //takes the id the changes and option object- we get in return the NEW updated object and run the validation on the updated values
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    //const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    //   new: true,
+    //   runValidators: true
+    // });
 
     if (!user) {
       return res.status(404).send();
