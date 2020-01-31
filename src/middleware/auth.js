@@ -1,3 +1,5 @@
+//setting up midelware to express for authentication BEFORE routing
+//this function is going to run BEFORE the routing
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 

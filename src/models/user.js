@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const Task = require("./task");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -54,6 +55,22 @@ const userSchema = new mongoose.Schema({
   ]
 });
 
+//setting relationship between tasks and user, not an actual filed in user, therfore virtual
+userSchema.virtual("tasks", {
+  ref: "Task", //just so mongoose can figur out what is owned by what and thair relations
+  localField: "_id",
+  foreignField: "owner" //he fileds that connects the 2 documents (like in sql keys)
+});
+
+//chacking if a user update filed is valid, returns fals is an unvalid filed was entered
+userSchema.statics.isValidUpdate = updates => {
+  const allowedUpdates = ["name", "email", "password"]; //all valid fileds to update
+  const isValidOperetion = updates.every(update =>
+    allowedUpdates.includes(update)
+  ); //will be true if onle EVERY string in the updates array is included in allowedUpdates
+  return isValidOperetion;
+};
+
 //generating user authentication token SPECIFIC OBJECT METHODS LIVA IN METHODS
 userSchema.methods.generateAuthToken = async function() {
   const user = this;
@@ -65,6 +82,18 @@ userSchema.methods.generateAuthToken = async function() {
   await user.save();
 
   return token;
+};
+
+//make sure hat when we send user back it will not contain the password and tokens
+userSchema.methods.toJSON = function() {
+  const user = this;
+
+  const userObject = user.toObject();
+
+  delete userObject.password;
+  delete userObject.tokens;
+
+  return userObject;
 };
 
 //user login MODEL FUNCTION LIVE IN STATICS
@@ -96,6 +125,13 @@ userSchema.pre("save", async function(next) {
   }
 
   //when we done, not gonne save the user if not called
+  next();
+});
+
+//delete user tasks when user is removed
+userSchema.pre("remove", async function(next) {
+  const user = this;
+  await Task.deleteMany({ owner: user._id });
   next();
 });
 

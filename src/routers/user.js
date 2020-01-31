@@ -20,6 +20,26 @@ router.post("/users", async (req, res) => {
   }
 });
 
+//user login
+router.post("/users/login", async (req, res) => {
+  try {
+    const user = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+
+    const token = await user.generateAuthToken();
+
+    res.send({
+      user,
+      token
+    });
+  } catch (e) {
+    res.status(400).send();
+  }
+});
+
+//////////////authentication needed//////////////
 //user logout from one session
 router.post("/users/logout", auth, async (req, res) => {
   try {
@@ -48,76 +68,23 @@ router.post("/users/logoutAll", auth, async (req, res) => {
   }
 });
 
-//user login
-router.post("/users/login", async (req, res) => {
-  try {
-    const user = await User.findByCredentials(
-      req.body.email,
-      req.body.password
-    );
-
-    const token = await user.generateAuthToken();
-
-    res.send({
-      user,
-      token
-    });
-  } catch (e) {
-    res.status(400).send();
-  }
-});
-
-//////////////authentication needed//////////////
 //get all the users on the database
 router.get("/users/me", auth, async (req, res) => {
   res.send(req.user);
 });
 
-//getting user with specific user id
-router.get("/users/:id", async (req, res) => {
-  //:id a dinemic key (a tool provided by express)
-  const _id = req.params.id;
-  try {
-    user = await User.findById(_id);
-    if (!user) {
-      return res.status(404).send();
-    }
-    res.send(user);
-  } catch (e) {
-    res.status(500).send();
-  }
-});
-
-//update user by id
-router.patch("/users/:id", async (req, res) => {
-  const updates = Object.keys(req.body); //all the fileds the user try to update
-  const allowedUpdates = ["name", "email", "password"]; //all valid fileds to update
-  const isValidOperetion = updates.every(update =>
-    allowedUpdates.includes(update)
-  ); //will be true if onle EVERY string in the updates array is included in allowedUpdates
-
-  if (!isValidOperetion) {
+//update my user
+router.patch("/users/me", auth, async (req, res) => {
+  const updates = Object.keys(req.body);
+  if (!User.isValidUpdate(updates)) {
+    //making sure a requested update filed is a valid field
     return res.status(400).send({ error: "invalid update field" });
   }
 
   try {
-    const user = await User.findById(req.params.id);
-
-    //accesing an unknown propperty
-    updates.forEach(update => (user[update] = req.body[update]));
-
-    //makeing sure we will call user.save so we can hash a new password if needed
-    await user.save();
-
-    //takes the id the changes and option object- we get in return the NEW updated object and run the validation on the updated values
-    //const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-    //   new: true,
-    //   runValidators: true
-    // });
-
-    if (!user) {
-      return res.status(404).send();
-    }
+    const user = req.user;
+    updates.forEach(update => (user[update] = req.body[update])); //accesing an unknown propperty
+    await user.save(); //makeing sure we will call user.save() so we can hash a new password if needed
 
     res.send(user);
   } catch (e) {
@@ -126,16 +93,12 @@ router.patch("/users/:id", async (req, res) => {
   }
 });
 
-//delete user by id
-router.delete("/users/:id", async (req, res) => {
+//delete mt user
+router.delete("/users/me", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    await req.user.remove();
 
-    if (!user) {
-      return res.status(404).send();
-    }
-
-    res.send(user);
+    res.send(req.user);
   } catch {
     res.status(500).send();
   }

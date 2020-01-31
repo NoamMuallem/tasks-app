@@ -9,8 +9,22 @@ const taskSchema = new mongoose.Schema({
   completed: {
     type: Boolean,
     default: false
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    require: true,
+    ref: "User" // needs to be identical to the name we gave in the user model file when we defined mongoose.model('User',userSchema)
   }
 });
+
+//chacking if a task update filed is valid, returns fals is an unvalid filed was entered
+taskSchema.statics.isValidUpdate = updates => {
+  const allowedUpdates = ["description", "completed"]; //all valid fileds to update
+  const isValidOperetion = updates.every(update =>
+    allowedUpdates.includes(update)
+  ); //will be true if onle EVERY string in the updates array is included in allowedUpdates
+  return isValidOperetion;
+};
 
 taskSchema.pre("save", async function(next) {
   const task = this;
