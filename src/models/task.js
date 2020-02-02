@@ -1,21 +1,26 @@
 const mongoose = require("mongoose");
 
-const taskSchema = new mongoose.Schema({
-  description: {
-    type: String,
-    trim: true,
-    required: true
+const taskSchema = new mongoose.Schema(
+  {
+    description: {
+      type: String,
+      trim: true,
+      required: true
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      require: true,
+      ref: "User" // needs to be identical to the name we gave in the user model file when we defined mongoose.model('User',userSchema)
+    }
   },
-  completed: {
-    type: Boolean,
-    default: false
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    require: true,
-    ref: "User" // needs to be identical to the name we gave in the user model file when we defined mongoose.model('User',userSchema)
+  {
+    timestamps: true
   }
-});
+);
 
 //chacking if a task update filed is valid, returns fals is an unvalid filed was entered
 taskSchema.statics.isValidUpdate = updates => {
@@ -25,14 +30,6 @@ taskSchema.statics.isValidUpdate = updates => {
   ); //will be true if onle EVERY string in the updates array is included in allowedUpdates
   return isValidOperetion;
 };
-
-taskSchema.pre("save", async function(next) {
-  const task = this;
-
-  console.log("before saveing task");
-
-  next();
-});
 
 const Task = mongoose.model("Task", taskSchema);
 

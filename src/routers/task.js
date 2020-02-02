@@ -18,11 +18,41 @@ router.post("/task", auth, async (req, res) => {
   }
 });
 
-//get all the tasks for this user
+//Get /tasks?completed=true
+//Get /tasks?limit=10&skip=3(page 3, 10 resolts=> show 20-29)
+//Get /tasks?sortBy=createdAt:asc/desc
 router.get("/tasks", auth, async (req, res) => {
+  const match = {};
+  const sort = {};
+
+  if (req.query.completed) {
+    //we get a string from req.query.completed, if the string equals to the string 'true'
+    //we will save that value and use that
+    //if nothing was provided we will get null and not populate match, so we will get all the tasks we have
+    match.completed = req.query.completed === "true";
+  }
+
+  if (req.query.sortBy) {
+    const parts = req.query.sortBy.split(":");
+    //sort by unknown field, accessing it with[], short if statmant to assighn 1 or -1 depending on the str in part[1]
+    sort[parts[0]] = parts[1] === "desc" ? -1 : 1;
+  }
+
   try {
-    const tasks = await Task.find({ owner: req.user._id });
-    res.send(tasks);
+    await req.user
+      .populate({
+        path: "tasks",
+        //match risolts to be true false or everything
+        match,
+        options: {
+          //limit the amount of the resolts given need to be a number, not a string, will be ignored if no limit spesefied
+          limit: parseInt(req.query.limit),
+          skip: parseInt(req.query.page) * parseInt(req.query.limit), // set to skip pages, not single tasks
+          sort
+        }
+      })
+      .execPopulate();
+    res.send(req.user.tasks);
   } catch (e) {
     res.statuse(500).send();
   }

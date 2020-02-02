@@ -4,56 +4,61 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Task = require("./task");
 
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    //adding validation and sanatization
-    required: true,
-    trim: true
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    trim: true, //removing spaces before and after content
-    lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("this email is unvalid");
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      //adding validation and sanatization
+      required: true,
+      trim: true
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true, //removing spaces before and after content
+      lowercase: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("this email is unvalid");
+        }
       }
-    }
-  },
-  age: {
-    type: Number,
-    defalt: 0,
-    //costum validation, cant input a negative age
-    validate(value) {
-      if (value < 0) {
-        throw new Error("age must be a positive number");
+    },
+    age: {
+      type: Number,
+      defalt: 0,
+      //costum validation, cant input a negative age
+      validate(value) {
+        if (value < 0) {
+          throw new Error("age must be a positive number");
+        }
       }
-    }
-  },
-  password: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: [7, "password is to short"],
-    validate(value) {
-      if (value.toLowerCase().includes("password")) {
-        throw new Error("invalid password");
+    },
+    password: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: [7, "password is to short"],
+      validate(value) {
+        if (value.toLowerCase().includes("password")) {
+          throw new Error("invalid password");
+        }
       }
-    }
-  },
-  tokens: [
-    {
-      //for all the token this user currently have (if he is login from multiple devices)
-      token: {
-        type: String,
-        required: true
+    },
+    tokens: [
+      {
+        //for all the token this user currently have (if he is login from multiple devices)
+        token: {
+          type: String,
+          required: true
+        }
       }
-    }
-  ]
-});
+    ]
+  },
+  {
+    timestamps: true
+  }
+);
 
 //setting relationship between tasks and user, not an actual filed in user, therfore virtual
 userSchema.virtual("tasks", {
