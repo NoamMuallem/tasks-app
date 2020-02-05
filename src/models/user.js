@@ -53,7 +53,10 @@ const userSchema = new mongoose.Schema(
           required: true
         }
       }
-    ]
+    ],
+    avatar: {
+      type: Buffer //bineries for image
+    }
   },
   {
     timestamps: true
@@ -97,6 +100,7 @@ userSchema.methods.toJSON = function() {
 
   delete userObject.password;
   delete userObject.tokens;
+  delete userObject.avatar; //data is to big, slow down json requests and not needed
 
   return userObject;
 };
