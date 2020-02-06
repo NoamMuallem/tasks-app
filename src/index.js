@@ -5,7 +5,7 @@ const taskRouter = require("./routers/task");
 
 //app config
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 
 //automaticly pars incoming json
 app.use(express.json());
@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(userRouter);
 app.use(taskRouter);
 
-//fire up server
+//fire up serv
 app.listen(port, () => {
   console.log("Server is up on port " + port);
 });

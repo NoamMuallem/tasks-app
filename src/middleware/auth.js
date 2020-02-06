@@ -7,7 +7,7 @@ const auth = async (req, res, next) => {
   try {
     //if thar is a token replace str 'Brear' with nothing, if not replace() will throw an error that we can catch
     const token = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, "bugovnkl");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     //the token contains the user id
     //search for a user with that id and that have this token in his tokens array

@@ -3,6 +3,7 @@ const multer = require("multer");
 const sharp = require("sharp");
 const User = require("../models/user");
 const auth = require("../middleware/auth");
+const email = require("../emails/account");
 const router = new express.Router();
 
 ////////////no authentication needed/////////////
@@ -12,8 +13,8 @@ router.post("/users", async (req, res) => {
 
   try {
     const token = await user.generateAuthToken();
-
-    res.send({
+    email.sendWelcomeEmail(user.email, user.name); //returns a promise but we are not interested to await for it
+    res.status(201).send({
       user,
       token
     });
@@ -95,11 +96,12 @@ router.patch("/users/me", auth, async (req, res) => {
   }
 });
 
-//delete mt user
+//delete my user
 router.delete("/users/me", auth, async (req, res) => {
   try {
     await req.user.remove();
 
+    email.sendCancelationEmail(req.user.email, req.user.name);
     res.send(req.user);
   } catch {
     res.status(500).send();
