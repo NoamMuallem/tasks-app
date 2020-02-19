@@ -80,7 +80,7 @@ userSchema.statics.isValidUpdate = updates => {
 };
 
 //generating user authentication token SPECIFIC OBJECT METHODS LIVA IN METHODS
-userSchema.methods.generateAuthToken = async function() {
+userSchema.methods.generateAuthToken = async function () {
   const user = this;
 
   const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
@@ -93,7 +93,7 @@ userSchema.methods.generateAuthToken = async function() {
 };
 
 //make sure hat when we send user back it will not contain the password and tokens
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const user = this;
 
   const userObject = user.toObject();
@@ -125,7 +125,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
 };
 
 //hash the plain text password
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   const user = this;
 
   //if thar is a new password(by creating or updaing), we have to hash it:
@@ -138,7 +138,7 @@ userSchema.pre("save", async function(next) {
 });
 
 //delete user tasks when user is removed
-userSchema.pre("remove", async function(next) {
+userSchema.pre("remove", async function (next) {
   const user = this;
   await Task.deleteMany({ owner: user._id });
   next();

@@ -4,7 +4,7 @@ const auth = require("../middleware/auth");
 const router = new express.Router();
 
 //creat task
-router.post("/task", auth, async (req, res) => {
+router.post("/tasks", auth, async (req, res) => {
   const task = new Task({
     ...req.body, //copy over all the fileds from req.body to the object
     owner: req.user._id
